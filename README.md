@@ -4,7 +4,7 @@
 
 Bugpilot is a platform to catch production errors in your React applications. You can learn more and signup for free at [https://app.bugpilot.com](https://app.bugpilot.com).
 
-This bugpilot plugin for Next.js (App Router) automatically captures errors in your Next.js application and sends them to your Bugpilot workspace.
+This Bugpilot plugin for Next.js (App Router) automatically captures errors in your Next.js application and sends them to your Bugpilot workspace.
 
 ## Usage
 
