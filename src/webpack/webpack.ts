@@ -7,7 +7,6 @@ import {
 } from "../types";
 
 const serverFunctionLoaderPath = __dirname + "/loaders/serverFunctionLoader.js";
-const rootLayoutLoaderPath = __dirname + "/loaders/rootLayoutLoader.js";
 
 export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
   return function (
@@ -94,20 +93,6 @@ export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
         ],
       });
     }
-
-    // Insert Bugpilot Browser JS code to enable screen recording and
-    // console logs recording.
-    configWithRules.module.rules.unshift({
-      test: /\/app\/layout.tsx$/,
-      use: [
-        {
-          loader: rootLayoutLoaderPath,
-          options: {
-            workspaceId: commonOptions.workspaceId,
-          },
-        },
-      ],
-    });
 
     return configWithRules;
   };
