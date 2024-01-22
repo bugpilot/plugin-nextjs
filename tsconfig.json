@@ -20,7 +20,6 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    ".eslintrc.cjs",
-    "src/client/Bugpilot.tsx",
+    ".eslintrc.cjs"
   ],
 }
