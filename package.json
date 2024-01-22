@@ -1,6 +1,6 @@
 {
   "name": "@bugpilot/plugin-nextjs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Bugpilot for Next.js App Router",
   "main": "./dist/index.js",
   "scripts": {
@@ -35,12 +35,14 @@
     "dist/**/*"
   ],
   "types": "./dist/index.d.ts",
-  "devDependencies": {
-    "@babel/core": "^7.23.7",
+  "dependencies": {
     "@babel/generator": "^7.23.6",
     "@babel/parser": "^7.23.6",
     "@babel/traverse": "^7.23.7",
-    "@babel/types": "^7.23.6",
+    "@babel/types": "^7.23.6"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.7",
     "@types/babel__core": "^7.20.5",
     "@types/babel-generator": "^6.25.8",
     "@types/babel-traverse": "^6.25.10",
