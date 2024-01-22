@@ -28,7 +28,9 @@ export const WidgetTrigger = ({ children }: WidgetTriggerProps) => {
 
   const childrenWithClassName = Children.map(children, (child) => {
     if (isValidElement<ValidTriggerElementTypes>(child)) {
-      return cloneElement(child, { className: "bug-report-button" });
+      return cloneElement(child, {
+        className: `${child.props.className || ""} bug-report-button`,
+      });
     }
 
     return child;
