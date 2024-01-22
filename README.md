@@ -6,6 +6,14 @@ Bugpilot is a platform to catch production errors in your React applications. Yo
 
 This Bugpilot plugin for Next.js (App Router) automatically captures errors in your Next.js application and sends them to your Bugpilot workspace.
 
+## Usage
+
+The easiest way to get started is to use our CLI Wizard. It will automatically install the plugin and configure your Next.js application:
+
+```bash
+npx @bugpilot/wizard@latest install
+```
+
 ## Key Features
 
 Bugpilot is specifically designed for Next.js applications using App Router and provides the following features:
@@ -39,13 +47,32 @@ This table shows which error types are supported by the Bugpilot plugin for Next
 
 You can customize the error pages by updating the code in `app/error.tsx` and `app/global-error.tsx`.
 
-## Usage
+## Customizations
 
-The easiest way to get started is to use our CLI Wizard. It will automatically install the plugin and configure your Next.js application:
+### Customizing the Bug Reporting Widget
 
-```bash
-npx @bugpilot/wizard@latest install
+You can replace the default *Report Bug* label with your own React component:
+
+```jsx
+import { WidgetTrigger } from '@bugpilot/plugin-nextjs';
+
+const MyComponent = () => {
+  // Wrap a button/anchor/div/span with the WidgetTrigger component.
+  // The component will automatically render the Bugpilot Bug Reporting widget when clicked.
+  // (WidgetTrigger is a client component because it needs to use event handlers)
+
+  return (
+    <WidgetTrigger>
+      <button>Report Bug</button>
+    </WidgetTrigger>
+  );
+};
+
 ```
+
+### Customizing the Error Pages
+
+Coming soon
 
 ## Manual Installation
 

@@ -69,3 +69,16 @@ export type ErrorEndpointPayload = {
   url: string;
   timestamp: number;
 };
+
+export type GlobalBugpilot = {
+  saveReport: (metadata: object, reportDataOverride: object) => void;
+  identify: (nextUser: object) => void;
+  logout: () => void;
+};
+
+type User = { id: string; email: string };
+
+export type BugpilotProps = React.PropsWithChildren<{
+  workspaceId: string;
+  user?: User;
+}>;

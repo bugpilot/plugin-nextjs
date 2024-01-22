@@ -1,7 +1,7 @@
-export { Bugpilot, useBugpilot } from "./client/Bugpilot";
-export { BugpilotReportBugComponent } from "./client/BugpilotReportBugComponent";
-export { BugpilotErrorPage } from "./client/ErrorPage";
-export { BugpilotGlobalErrorPage } from "./client/GlobalErrorPage";
-
+// Server exports:
 export { wrapServerFunction } from "./wrap-server-function";
 export { withBugpilot } from "./withBugpilot";
+
+// Client exports:
+export { Bugpilot } from "./client/Bugpilot";
+export { WidgetTrigger } from "./client/WidgetTrigger";

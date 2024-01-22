@@ -2,10 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "esModuleInterop": true,
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noImplicitAny": false,
@@ -16,16 +13,14 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES6",
-    "types": [
-      "node"
-    ],
-    "jsx": "react-jsx"
+    "types": ["node"],
+    "jsx": "react-jsx",
   },
-  "exclude": [
-    "node_modules"
-  ],
+  "exclude": ["node_modules"],
   "include": [
     "src/**/*.ts",
-    ".eslintrc.cjs"
-  ]
+    "src/**/*.tsx",
+    ".eslintrc.cjs",
+    "src/client/Bugpilot.tsx",
+  ],
 }
