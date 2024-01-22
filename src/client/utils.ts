@@ -4,14 +4,6 @@ import { GlobalBugpilot } from "../types";
 const BUGPILOT_CHECK_INTERVAL_MS = 1.5 * 1000;
 const BUGPILOT_CHECK_MAX_ATTEMPTS = 3;
 
-declare global {
-  interface Window {
-    Bugpilot: GlobalBugpilot;
-  }
-}
-
-declare const window: Window;
-
 export const waitForBugpilot = (
   cb: (bugpilot: GlobalBugpilot) => void,
   attempts_ = 0,

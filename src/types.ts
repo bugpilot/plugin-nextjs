@@ -82,3 +82,9 @@ export type BugpilotProps = React.PropsWithChildren<{
   workspaceId: string;
   user?: User;
 }>;
+
+declare global {
+  interface Window {
+    Bugpilot: GlobalBugpilot;
+  }
+}
