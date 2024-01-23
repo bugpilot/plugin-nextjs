@@ -35,7 +35,7 @@ export function withBugpilot(
       return originalNextConfig;
     }
 
-    // NextConfig can be a function, async function or object.
+    // Next supports functions, async functions and object as next.config
     if (typeof originalNextConfig === "function") {
       return function (this: unknown, ...args: unknown[]) {
         const maybeUserNextConfig = originalNextConfig.apply(this, args);
