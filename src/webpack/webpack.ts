@@ -1,4 +1,7 @@
-import { WebpackConfigContext } from "next/dist/server/config-shared";
+import {
+  NextConfig,
+  WebpackConfigContext,
+} from "next/dist/server/config-shared";
 
 import {
   BugpilotConfig,
@@ -8,20 +11,34 @@ import {
 
 const serverFunctionLoaderPath = __dirname + "/loaders/serverFunctionLoader.js";
 
-export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
+export function webpackConfigFnFactory(
+  originalNextConfig: NextConfig,
+  bugpilotConfig: BugpilotConfig,
+) {
   return function (
     config: WebpackConfiguration,
-    { buildId, dev, isServer, nextRuntime }: WebpackConfigContext,
+    context: WebpackConfigContext,
   ) {
-    const configWithRules = {
-      ...config,
+    let newConfig = { ...config };
+
+    // if the user has a custom webpack config in their next.config.js, we run it
+    if (typeof originalNextConfig.webpack === "function") {
+      newConfig = originalNextConfig.webpack(
+        config,
+        context,
+      ) as WebpackConfiguration;
+    }
+
+    const newConfigWithRules = {
+      ...newConfig,
       module: {
-        ...config.module,
+        ...newConfig.module,
         // Note: rules is optional in WebpackConfiguration
-        rules: [...(config.module?.rules || [])],
+        rules: [...(newConfig.module?.rules || [])],
       },
     };
 
+    const { buildId, dev, isServer, nextRuntime } = context;
     const commonOptions: Omit<WebpackLoaderOptions, "kind"> = {
       buildId,
       dev,
@@ -32,7 +49,7 @@ export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
 
     if (isServer === true) {
       // Wrap middleware
-      configWithRules.module.rules.unshift({
+      newConfigWithRules.module.rules.unshift({
         test: /\/middleware.ts$/,
         use: [
           {
@@ -46,7 +63,7 @@ export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
       });
 
       // Wrap server components
-      configWithRules.module.rules.unshift({
+      newConfigWithRules.module.rules.unshift({
         test: /\.tsx$/,
         exclude:
           /\/(page|layout|error|global-error|not-found|middleware|route|template|default).tsx$/,
@@ -62,7 +79,7 @@ export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
       });
 
       // Wrap Server Actions and Inline Server Actions
-      configWithRules.module.rules.unshift({
+      newConfigWithRules.module.rules.unshift({
         test: /\.(ts|tsx)$/,
         exclude:
           /\/(layout|error|global-error|not-found|middleware|route|template|default|api\/).tsx?$/,
@@ -79,7 +96,7 @@ export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
       });
 
       // Wrap server pages
-      configWithRules.module.rules.unshift({
+      newConfigWithRules.module.rules.unshift({
         test: /\/page.tsx$/,
         include: /\/app\//,
         use: [
@@ -94,6 +111,6 @@ export function webpackConfigFnFactory(bugpilotConfig: BugpilotConfig) {
       });
     }
 
-    return configWithRules;
+    return newConfigWithRules;
   };
 }

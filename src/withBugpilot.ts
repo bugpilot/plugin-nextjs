@@ -7,21 +7,21 @@ import { webpackConfigFnFactory } from "./webpack/webpack";
 
 export function withBugpilot(
   originalNextConfig: NextConfig,
-  config: BugpilotConfig,
+  bugpilotConfig: BugpilotConfig,
 ) {
-  if (!config) {
+  if (!bugpilotConfig) {
     throw new BugpilotPluginError(
-      "Missing required argument `config` in withBugpilot(). Check next.config.js.",
+      "Missing required argument `bugpilotConfig` in withBugpilot(). Check next.config.js.",
     );
   }
 
   try {
-    if (config.debug) {
+    if (bugpilotConfig.debug) {
       logger.setDebug(true);
       logger.debug("Debug mode enabled.");
     }
 
-    if (!config.workspaceId) {
+    if (!bugpilotConfig.workspaceId) {
       throw new BugpilotPluginError(
         "Missing required property `workspaceId` in bugpilot.config.js.",
       );
@@ -32,8 +32,11 @@ export function withBugpilot(
       return originalNextConfig;
     }
 
-    const bugpilotNextConfig = config.next || {};
-    const webpackConfigFn = webpackConfigFnFactory(config);
+    const bugpilotNextConfig = bugpilotConfig.next || {};
+    const webpackConfigFn = webpackConfigFnFactory(
+      originalNextConfig,
+      bugpilotConfig,
+    );
 
     return {
       ...originalNextConfig,
