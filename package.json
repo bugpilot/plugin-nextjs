@@ -1,6 +1,6 @@
 {
   "name": "@bugpilot/plugin-nextjs",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Bugpilot for Next.js App Router",
   "main": "./dist/index.js",
   "scripts": {
