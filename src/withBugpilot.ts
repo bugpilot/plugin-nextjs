@@ -31,33 +31,37 @@ export function withBugpilot(
     }
 
     if (process.env.NODE_ENV !== "production") {
-      logger.info("Disabled in development.");
+      logger.info(
+        "Bugpilot only works in production. To test it, run: `npm run build && npm run start` on your local machine.",
+      );
       return originalNextConfig;
     }
 
     // Next supports functions, async functions and object as next.config
     if (typeof originalNextConfig === "function") {
-      return function (this: unknown, ...args: unknown[]) {
-        const maybeUserNextConfig = originalNextConfig.apply(this, args);
+      const configFn = (...args: unknown[]) => {
+        const configOrPromise = originalNextConfig(...args);
 
-        if (maybeUserNextConfig instanceof Promise) {
-          return maybeUserNextConfig.then((userNextConfig: NextConfig) => {
-            return getFinalNextjsConfig({
+        if (configOrPromise instanceof Promise) {
+          return configOrPromise.then((nextConfig: NextConfig) => {
+            return mergeNextConfig({
               bugpilotConfig,
-              userNextConfig,
+              nextConfig,
             });
           });
-        } else {
-          return getFinalNextjsConfig({
-            bugpilotConfig,
-            userNextConfig: maybeUserNextConfig,
-          });
         }
+
+        return mergeNextConfig({
+          bugpilotConfig,
+          nextConfig: configOrPromise,
+        });
       };
+
+      return configFn;
     } else {
-      return getFinalNextjsConfig({
+      return mergeNextConfig({
         bugpilotConfig,
-        userNextConfig: originalNextConfig,
+        nextConfig: originalNextConfig,
       });
     }
   } catch (e) {
@@ -77,21 +81,18 @@ export function withBugpilot(
   }
 }
 
-function getFinalNextjsConfig({
+function mergeNextConfig({
   bugpilotConfig,
-  userNextConfig,
+  nextConfig,
 }: {
   bugpilotConfig: BugpilotConfig;
-  userNextConfig: NextConfig;
+  nextConfig: NextConfig;
 }) {
   const bugpilotNextConfig = bugpilotConfig.next || {};
-  const webpackConfigFn = webpackConfigFnFactory(
-    userNextConfig,
-    bugpilotConfig,
-  );
+  const webpackConfigFn = webpackConfigFnFactory(nextConfig, bugpilotConfig);
 
   return {
-    ...userNextConfig,
+    ...nextConfig,
     ...bugpilotNextConfig,
     webpack: webpackConfigFn,
   };
