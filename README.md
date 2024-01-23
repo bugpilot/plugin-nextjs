@@ -11,7 +11,7 @@ This Bugpilot plugin for Next.js (App Router) automatically captures errors in y
 The easiest way to get started is to use our CLI Wizard. It will automatically install the plugin and configure your Next.js application:
 
 ```bash
-npx @bugpilot/wizard@latest install
+pnpm dlx @bugpilot/wizard@latest install
 ```
 
 ## Key Features
