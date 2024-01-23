@@ -66,10 +66,59 @@ export function isServerAction(path: NodePath) {
  * Returns true if node is exported (named, not default), function declaration and has the name "middleware".
  */
 export function isMiddleware(path: NodePath) {
-  return (
+  // export function middleware(){}
+  const isExportNamedFunction =
     path.isFunctionDeclaration() &&
     path.parentPath?.isExportNamedDeclaration() &&
-    path.node.id?.name === "middleware"
+    path.node.id?.name === "middleware";
+
+  // export const middleware = () => {}
+  const isExportNamedArrowFunction =
+    path.isArrowFunctionExpression() &&
+    path.parentPath.isVariableDeclarator() &&
+    path.parentPath.node.id.type === "Identifier" &&
+    path.parentPath?.node.id.name === "middleware";
+
+  // export default middleware;
+  const isExportDefaultIdentifier =
+    path.isIdentifier() &&
+    path.node.name === "middleware" &&
+    path.parentPath?.isExportDefaultDeclaration();
+
+  // export { middleware }
+  const isExportNamedExportSpecifier =
+    path.isExportSpecifier() &&
+    t.isIdentifier(path.node.exported) &&
+    path.node.exported.name === "middleware" &&
+    path.parentPath?.isExportNamedDeclaration();
+
+  return (
+    isExportNamedFunction ||
+    isExportNamedArrowFunction ||
+    isExportDefaultIdentifier ||
+    isExportNamedExportSpecifier
+  );
+}
+
+export function isPageComponent(path: NodePath) {
+  // export default () => {}
+  const isDefaultExportArrowFunction =
+    path.isArrowFunctionExpression() &&
+    path.parentPath?.isExportDefaultDeclaration();
+
+  // export default function Home() {}
+  const isDefaultExportFunction =
+    path.isFunctionDeclaration() &&
+    path.parentPath?.isExportDefaultDeclaration();
+
+  // export default Home;
+  const isDefaultExportIdentifier =
+    path.isIdentifier() && path.parentPath?.isExportDefaultDeclaration();
+
+  return (
+    isDefaultExportArrowFunction ||
+    isDefaultExportFunction ||
+    isDefaultExportIdentifier
   );
 }
 
@@ -101,6 +150,8 @@ export function wrapWithFunction(
     return wrapArrowFunction(path, wrapFunctionName, optionsExpression);
   } else if (path.isFunctionDeclaration()) {
     return wrapFunctionDeclaration(path, wrapFunctionName, optionsExpression);
+  } else if (path.isIdentifier()) {
+    return wrapIdentifier(path, wrapFunctionName, optionsExpression);
   } else {
     throw new BugpilotPluginError(
       "wrapWithFunction(): Unsupported node type. Only arrow functions and function declarations are supported.",
@@ -187,4 +238,19 @@ function wrapFunctionDeclaration(
   } else {
     path.replaceWith(wrappedFunction);
   }
+}
+
+function wrapIdentifier(
+  path: NodePath<t.Identifier>,
+  wrapFunctionName: string,
+  optionsExpression: t.ObjectExpression,
+) {
+  const originalFunctionIdentifier = t.identifier(path.node.name);
+
+  const wrappedIdentifier = t.callExpression(t.identifier(wrapFunctionName), [
+    originalFunctionIdentifier,
+    optionsExpression,
+  ]);
+
+  path.replaceWith(wrappedIdentifier);
 }
