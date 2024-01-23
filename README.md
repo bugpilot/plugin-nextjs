@@ -11,7 +11,7 @@ This Bugpilot plugin for Next.js (App Router) automatically captures errors in y
 The easiest way to get started is to use our CLI Wizard. It will automatically install the plugin and configure your Next.js application:
 
 ```bash
-npx @bugpilot/wizard@latest install
+pnpm dlx @bugpilot/wizard@latest install
 ```
 
 ## Key Features
@@ -34,18 +34,18 @@ This table shows which error types are supported by the Bugpilot plugin for Next
 |---------------------------|----------------|--------------------------|
 | Server page               | Yes            | Yes                      |
 | Server component          | Yes            | Yes                      |
+| Client component / page   | Yes            | Yes                      |
 | Server form               | Yes            | Yes                      |
-| Server action             | Yes            | Yes                      |
-| Inline server action      | Yes            | Yes                      |
-| Client component          | Yes            | Yes                      |
-| Browser exceptions        | Yes            | No                       |
-| Errors in event handlers  | Yes            | No                       |
-| Middleware                | Yes            | Not supported in Next.js |
 | Layout                    | Yes            | Yes                      |
-| Root Layout errors        | Yes            | Yes (app/global-error.tsx) |
+| Root Layout               | Yes            | Yes                      |
+| Server action             | Yes            | No (*)                   |
+| Inline server action      | Yes            | No (*)                   |
+| Browser exceptions        | Yes            | No (*)                   |
+| Errors in event handlers  | Yes            | No (*)                   |
+| Middleware                | Yes            | Default Next.js Application Error |
 | API Routes                | No             | No                       |
 
-You can customize the error pages by updating the code in `app/error.tsx` and `app/global-error.tsx`.
+(*) Work in progress. For supported scenarios, you can customize the error pages by updating the code in `app/error.tsx` and `app/global-error.tsx` (for root layout errors).
 
 ## Customizations
 
