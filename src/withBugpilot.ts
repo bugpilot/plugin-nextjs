@@ -6,12 +6,21 @@ import { BugpilotConfig } from "./types";
 import { webpackConfigFnFactory } from "./webpack/webpack";
 
 export function withBugpilot(
-  originalNextConfig: NextConfig,
+  originalNextConfig:
+    | NextConfig
+    | ((...args: unknown[]) => NextConfig)
+    | ((...args: unknown[]) => Promise<NextConfig>),
   bugpilotConfig: BugpilotConfig,
 ) {
   if (!bugpilotConfig) {
     throw new BugpilotPluginError(
       "Missing required argument `bugpilotConfig` in withBugpilot(). Check next.config.js.",
+    );
+  }
+
+  if (!bugpilotConfig.workspaceId) {
+    throw new BugpilotPluginError(
+      "Missing required property `workspaceId` in bugpilot.config.js.",
     );
   }
 
@@ -21,28 +30,40 @@ export function withBugpilot(
       logger.debug("Debug mode enabled.");
     }
 
-    if (!bugpilotConfig.workspaceId) {
-      throw new BugpilotPluginError(
-        "Missing required property `workspaceId` in bugpilot.config.js.",
-      );
-    }
-
     if (process.env.NODE_ENV !== "production") {
-      logger.info("Disabled in development.");
+      logger.info(
+        "Bugpilot only works in production. To test it, run: `npm run build && npm run start` on your local machine.",
+      );
       return originalNextConfig;
     }
 
-    const bugpilotNextConfig = bugpilotConfig.next || {};
-    const webpackConfigFn = webpackConfigFnFactory(
-      originalNextConfig,
-      bugpilotConfig,
-    );
+    // Next supports functions, async functions and object as next.config
+    if (typeof originalNextConfig === "function") {
+      const configFn = (...args: unknown[]) => {
+        const configOrPromise = originalNextConfig(...args);
 
-    return {
-      ...originalNextConfig,
-      ...bugpilotNextConfig,
-      webpack: webpackConfigFn,
-    };
+        if (configOrPromise instanceof Promise) {
+          return configOrPromise.then((nextConfig: NextConfig) => {
+            return mergeNextConfig({
+              bugpilotConfig,
+              nextConfig,
+            });
+          });
+        }
+
+        return mergeNextConfig({
+          bugpilotConfig,
+          nextConfig: configOrPromise,
+        });
+      };
+
+      return configFn;
+    } else {
+      return mergeNextConfig({
+        bugpilotConfig,
+        nextConfig: originalNextConfig,
+      });
+    }
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "MODULE_NOT_FOUND") {
       logger.error("Cannot load bugpilot.config.js: file not found.");
@@ -58,4 +79,21 @@ export function withBugpilot(
     logger.error("withBugpilot() unexpected error:", (e as Error).message);
     throw e;
   }
+}
+
+function mergeNextConfig({
+  bugpilotConfig,
+  nextConfig,
+}: {
+  bugpilotConfig: BugpilotConfig;
+  nextConfig: NextConfig;
+}) {
+  const bugpilotNextConfig = bugpilotConfig.next || {};
+  const webpackConfigFn = webpackConfigFnFactory(nextConfig, bugpilotConfig);
+
+  return {
+    ...nextConfig,
+    ...bugpilotNextConfig,
+    webpack: webpackConfigFn,
+  };
 }
