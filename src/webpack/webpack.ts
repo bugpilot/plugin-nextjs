@@ -44,7 +44,7 @@ export function webpackConfigFnFactory(
       // We don't wrap client code for performance reasons,
       // client errors are still bubbled up to the closes error
       // boundary (or error.tsx) and reported to Bugpilot.
-      return;
+      return newConfigWithRules;
     }
 
     const commonOptions: Omit<WebpackLoaderOptions, "kind"> = {
