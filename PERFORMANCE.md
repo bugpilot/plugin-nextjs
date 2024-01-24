@@ -10,7 +10,7 @@ Tests are run against a bare create-next-app project with the default configurat
 
 We also compare the bundle size, by looking at the output of the `next build` command.
 
-Hardware: Tests are run on an M1 Macbook Pro with 16GB of RAM.  
+Hardware: Tests are run on an M1 MacBook Pro with 16GB of RAM.  
 Results: Below you can find the most recent results.  
 
 ```bash
