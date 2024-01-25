@@ -71,11 +71,7 @@ export default function serverFunctionLoader(
 
       let shouldWrap = false;
 
-      if (
-        buildContext.kind === "page-component" &&
-        isReactElement(path) &&
-        path.parentPath?.isExportDefaultDeclaration()
-      ) {
+      if (buildContext.kind === "page-component" && isReactElement(path)) {
         shouldWrap = true;
       }
 
