@@ -13,11 +13,7 @@ export function getRelativePath(fullPath: string) {
 }
 
 export function isClientComponent(source: string) {
-  return (
-    source.includes("__next_internal_client_entry_do_not_use__") ||
-    source.includes("use client") ||
-    source.includes("import { createProxy }")
-  );
+  return source.includes("__next_internal_client_entry_do_not_use__");
 }
 
 export function containsServerActions(source: string) {
@@ -117,18 +113,15 @@ function isReturningJSXElement(path: NodePath) {
   let foundJSX = false;
 
   path.traverse({
-    ReturnStatement(returnPath: NodePath<t.ReturnStatement>) {
+    CallExpression(callPath: NodePath<t.CallExpression>) {
       if (foundJSX) {
         return;
       }
 
-      const argument = returnPath.get("argument");
-
+      const calleePath = callPath.get("callee");
       if (
-        t.isCallExpression(argument.node) &&
-        t.isIdentifier(argument.node.callee) &&
-        (argument.node.callee.name === "_jsx" ||
-          argument.node.callee.name === "_jsxs")
+        t.isIdentifier(calleePath.node) &&
+        (calleePath.node.name === "_jsx" || calleePath.node.name === "_jsxs")
       ) {
         foundJSX = true;
         path.skip();
