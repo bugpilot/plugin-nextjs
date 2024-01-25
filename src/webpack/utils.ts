@@ -124,7 +124,7 @@ function isReturningJSXElement(path: NodePath) {
         (calleePath.node.name === "_jsx" || calleePath.node.name === "_jsxs")
       ) {
         foundJSX = true;
-        return;
+        path.skip();
       }
     },
   });
