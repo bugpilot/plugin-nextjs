@@ -9,6 +9,15 @@ import {
   WebpackLoaderOptions,
 } from "../types";
 
+import {
+  isApiRouteFile,
+  isMiddlewareFile,
+  isPageComponentFile,
+  isRouteHandlerFile,
+  isServerActionFile,
+  isServerComponentFile,
+} from "./utils";
+
 const serverFunctionLoaderPath = __dirname + "/loaders/serverFunctionLoader.js";
 
 export function webpackConfigFnFactory(
@@ -106,6 +115,26 @@ export function webpackConfigFnFactory(
     newConfigWithRules.module.rules.unshift({
       test: /\/page.tsx$/,
       include: /\/app\//,
+      use: [
+        {
+          loader: serverFunctionLoaderPath,
+          options: {
+            ...commonOptions,
+            kind: "page-component",
+          } as WebpackLoaderOptions,
+        },
+      ],
+    });
+
+    // New Wrap
+    newConfigWithRules.module.rules.unshift({
+      test: (filePath) =>
+        isPageComponentFile(filePath) ||
+        isServerComponentFile(filePath) ||
+        isServerActionFile(filePath) ||
+        isRouteHandlerFile(filePath) ||
+        isMiddlewareFile(filePath) ||
+        isApiRouteFile(filePath),
       use: [
         {
           loader: serverFunctionLoaderPath,

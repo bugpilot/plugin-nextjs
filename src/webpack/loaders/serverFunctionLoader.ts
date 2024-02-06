@@ -12,8 +12,10 @@ import {
   getRelativePath,
   isClientComponent,
   isMiddleware,
+  isPageComponent,
   isReactElement,
   isServerAction,
+  isServerComponent,
   wrapWithFunction,
 } from "../utils";
 
@@ -49,6 +51,26 @@ export default function serverFunctionLoader(
         return;
       }
 
+      // check if it's exported
+      // if (
+      //   !path.parentPath?.isExportNamedDeclaration() &&
+      //   !path.parentPath?.isExportDefaultDeclaration()
+      // ) {
+      //   return;
+      // }
+
+      // but can also be exported as a variable at the bottom of the file i.e export default Page; or export { Page }
+
+      // isReactElement(){
+      // kind: isPageFile(resourePath) ? "page-component" : "server-component";
+      //  wrapWithFunction(path, "wrapServerFunction", buildContext);
+      // }
+
+      // middleware, route handler, server-action, api handler, other db functions.
+      if (isMiddleware(path)) {
+        buildContext.kind = "middleware";
+      }
+
       // @ts-expect-error the property id exists even if it's not in the type definition
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const functionName: string = path.isFunctionDeclaration()
@@ -71,27 +93,48 @@ export default function serverFunctionLoader(
 
       let shouldWrap = false;
 
-      if (buildContext.kind === "page-component" && isReactElement(path)) {
+      if (isPageComponent(resourcePath, path)) {
+        buildContext.kind = "page-component";
         shouldWrap = true;
       }
 
-      if (buildContext.kind === "server-component" && isReactElement(path)) {
+      if (isServerComponent(resourcePath, path)) {
+        buildContext.kind = "server-component";
         shouldWrap = true;
       }
 
-      if (
-        buildContext.kind === "server-action" &&
-        containsServerActions(source) && // TODO: refactor, remove or move to top
-        isServerAction(path)
-      ) {
-        // TODO: inline server actions have names like $$ACTION_0, $$ACTION_1, etc.
-        // we should set a human readable name
+      // TODO: inline server actions have names like $$ACTION_0, $$ACTION_1, etc.
+      // we should set a human readable name
+      if (containsServerActions(source) && isServerAction(resourcePath, path)) {
+        buildContext.kind === "server-action";
         shouldWrap = true;
       }
 
       if (buildContext.kind === "middleware" && isMiddleware(path)) {
         shouldWrap = true;
       }
+
+      // if (buildContext.kind === "page-component" && isReactElement(path)) {
+      //   shouldWrap = true;
+      // }
+
+      // if (buildContext.kind === "server-component" && isReactElement(path)) {
+      //   shouldWrap = true;
+      // }
+
+      // if (
+      //   buildContext.kind === "server-action" &&
+      //   containsServerActions(source) && // TODO: refactor, remove or move to top
+      //   isServerAction(path)
+      // ) {
+      //   // TODO: inline server actions have names like $$ACTION_0, $$ACTION_1, etc.
+      //   // we should set a human readable name
+      //   shouldWrap = true;
+      // }
+
+      // if (buildContext.kind === "middleware" && isMiddleware(path)) {
+      //   shouldWrap = true;
+      // }
 
       if (!shouldWrap) {
         return;
@@ -117,6 +160,8 @@ export default function serverFunctionLoader(
       ],
       t.stringLiteral("@bugpilot/plugin-nextjs"),
     );
+
+    // create BuildContext object
 
     ast.program.body.unshift(bugpilotImports);
   }
