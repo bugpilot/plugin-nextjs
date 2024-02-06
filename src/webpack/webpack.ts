@@ -14,7 +14,6 @@ import {
   isMiddlewareFile,
   isPageComponentFile,
   isRouteHandlerFile,
-  isServerActionFile,
   isServerComponentFile,
 } from "./utils";
 
@@ -64,84 +63,18 @@ export function webpackConfigFnFactory(
       debug: bugpilotConfig?.debug,
     };
 
-    // Wrap middleware
-    newConfigWithRules.module.rules.unshift({
-      test: /\/middleware.ts$/,
-      use: [
-        {
-          loader: serverFunctionLoaderPath,
-          options: {
-            ...commonOptions,
-            kind: "middleware",
-          } as WebpackLoaderOptions,
-        },
-      ],
-    });
-
-    // Wrap server components
-    newConfigWithRules.module.rules.unshift({
-      test: /\.tsx$/,
-      exclude:
-        /\/(page|layout|error|global-error|not-found|middleware|route|template|default).tsx$/,
-      use: [
-        {
-          loader: serverFunctionLoaderPath,
-          options: {
-            ...commonOptions,
-            kind: "server-component",
-          } as WebpackLoaderOptions,
-        },
-      ],
-    });
-
-    // Wrap Server Actions and Inline Server Actions
-    newConfigWithRules.module.rules.unshift({
-      test: /\.(ts|tsx)$/,
-      exclude:
-        /\/(layout|error|global-error|not-found|middleware|route|template|default|api\/).tsx?$/,
-      include: /\/app\//,
-      use: [
-        {
-          loader: serverFunctionLoaderPath,
-          options: {
-            ...commonOptions,
-            kind: "server-action",
-          } as WebpackLoaderOptions,
-        },
-      ],
-    });
-
-    // Wrap server pages
-    newConfigWithRules.module.rules.unshift({
-      test: /\/page.tsx$/,
-      include: /\/app\//,
-      use: [
-        {
-          loader: serverFunctionLoaderPath,
-          options: {
-            ...commonOptions,
-            kind: "page-component",
-          } as WebpackLoaderOptions,
-        },
-      ],
-    });
-
     // New Wrap
     newConfigWithRules.module.rules.unshift({
       test: (filePath) =>
         isPageComponentFile(filePath) ||
         isServerComponentFile(filePath) ||
-        isServerActionFile(filePath) ||
         isRouteHandlerFile(filePath) ||
         isMiddlewareFile(filePath) ||
         isApiRouteFile(filePath),
       use: [
         {
           loader: serverFunctionLoaderPath,
-          options: {
-            ...commonOptions,
-            kind: "page-component",
-          } as WebpackLoaderOptions,
+          options: commonOptions,
         },
       ],
     });

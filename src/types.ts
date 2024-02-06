@@ -14,7 +14,14 @@ export type BugpilotBuildContext = {
   dev: boolean;
   filePath: string;
   functionName: string;
-  kind: "page-component" | "server-component" | "server-action" | "middleware";
+  kind:
+    | "page-component"
+    | "server-component"
+    | "server-action"
+    | "middleware"
+    | "api-route"
+    | "route-handler"
+    | "function";
   nextRuntime?: string;
   workspaceId: string;
 };
@@ -26,7 +33,7 @@ export type BugpilotClientContext = {
 
 export type WebpackLoaderOptions = Omit<
   BugpilotBuildContext,
-  "filePath" | "functionName"
+  "filePath" | "functionName" | "kind"
 >;
 
 export type BugpilotContext = BugpilotBuildContext | BugpilotClientContext;
@@ -38,7 +45,7 @@ export type BugpilotConfig = {
     productionBrowserSourceMaps?: boolean;
   };
 };
-export type NextError = Error & { digest?: string };
+export type NextError = Error & { digest?: string } & { isCaptured?: boolean };
 
 export type WebpackConfiguration = {
   // Sorry, type definitions imported from 'webpack' cannot be used here

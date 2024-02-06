@@ -16,14 +16,10 @@ export function isClientComponent(source: string) {
   return source.includes("__next_internal_client_entry_do_not_use__");
 }
 
-export function containsServerActions(source: string) {
-  return source.includes("createActionProxy");
-}
-
 export function isPageComponentFile(filePath: string) {
   // in the future add support for .ts, .js, .jsx
-  const includePatternAppRouter = /^(\/src\/app|\/app)\/.*\/?page.tsx$/;
-  const includePatternPagesRouter = /^(\/src\/pages|\/pages)\/.*\/?.*\.tsx$/;
+  const includePatternAppRouter = /(src\/app|app).*\/page\.tsx$/;
+  const includePatternPagesRouter = /(src\/pages|pages).*\/.+\.tsx$/;
   return (
     includePatternAppRouter.test(filePath) ||
     includePatternPagesRouter.test(filePath)
@@ -33,7 +29,7 @@ export function isPageComponentFile(filePath: string) {
 export function isServerComponentFile(filePath: string) {
   const includePattern = /\.tsx$/;
   const excludePatternPagesRouter =
-    /(^(\/src\/pages|\/pages)\/)|(\/(_app|_document|_error|404|500)\.tsx$)/;
+    /((src\/pages|pages)\/)|(\/(_app|_document|_error|404|500)\.tsx$)/;
   const excludePatternAppRouter =
     /\/(page|layout|error|global-error|loading|not-found|middleware|route|template|default)\.tsx$/;
 
@@ -48,21 +44,6 @@ export function isServerComponentFile(filePath: string) {
   return false;
 }
 
-export function isServerActionFile(filePath: string) {
-  const includePattern = /^(\/src\/app|\/app)\/.*\/(page.tsx|.*\.ts)$/;
-  const excludePattern =
-    /\/(layout|error|global-error|loading|not-found|middleware|route|template|default)\.tsx$/;
-
-  if (
-    includePattern.test(filePath) &&
-    excludePattern.test(filePath) === false
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
 export function isMiddlewareFile(filePath: string) {
   const includePattern = /\/middleware.ts$/;
 
@@ -70,55 +51,63 @@ export function isMiddlewareFile(filePath: string) {
 }
 
 export function isRouteHandlerFile(filePath: string) {
-  const includePattern = /^(\/src\/app|\/app)\/.*\/route\.ts$/;
+  const includePattern = /(src\/app|app).*\/route\.ts$/;
   return includePattern.test(filePath);
 }
 
 export function isApiRouteFile(filePath: string) {
-  const includePattern = /^(\/src\/pages|\/pages)\/api\/.*\.ts/;
+  const includePattern = /(src\/pages|pages).*\/api\/.+\.ts/;
   return includePattern.test(filePath);
 }
 
-export function isPageComponent(nodePath: NodePath) {
-  return isReactElement(nodePath);
-}
+export function getFunctionName(
+  path: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
+) {
+  let name: string | undefined = undefined;
 
-export function isServerComponent(filePath: string, nodePath: NodePath) {
-  // in the future add support for .ts, .js, .jsx
-  const includePattern = /\.tsx$/;
-  const excludePatternPagesRouter = /\/(_error|_document|_app).tsx$/;
-  const excludePatternAppRouter =
-    /\/(page|layout|error|global-error|not-found|middleware|route|template|default).tsx$/;
-
-  if (
-    includePattern.test(filePath) === false ||
-    excludePatternAppRouter.test(filePath) ||
-    excludePatternPagesRouter.test(filePath)
+  if (path.isFunctionDeclaration()) {
+    name = path.node.id?.name;
+  } else if (
+    path.isArrowFunctionExpression() &&
+    path.parentPath?.isVariableDeclarator() &&
+    path.parentPath.node.id.type === "Identifier"
   ) {
-    return false;
+    name = path.parentPath.node.id?.name;
   }
 
-  return isReactElement(nodePath);
+  return name === undefined ? "unknown" : name;
 }
 
+export function getKind(
+  filePath: string,
+  nodePath: NodePath,
+): BugpilotBuildContext["kind"] {
+  if (isPageComponentFile(filePath) && isReactElement(nodePath)) {
+    return "page-component";
+  } else if (isServerComponentFile(filePath) && isReactElement(nodePath)) {
+    return "server-component";
+  } else if (isServerAction(nodePath)) {
+    return "server-action";
+  } else if (isRouteHandlerFile(filePath)) {
+    return "route-handler";
+  } else if (isMiddlewareFile(filePath)) {
+    return "middleware";
+  } else if (isApiRouteFile(filePath)) {
+    return "api-route";
+  }
+
+  return "function";
+}
+
+// function containsServerActions(source: string) {
+//   return source.includes("createActionProxy");
+// }
 /**
  * Returns true if node is exported (named, not default), async, function or arrow function.
  * Important: Additionally we check if the "use server" directive is used.
  * i.e export async function myServerAction() {} or export const myServerAction = async () => {}
  */
-export function isServerAction(filePath: string, nodePath: NodePath) {
-  const excludePattern =
-    /\/(layout|error|global-error|not-found|middleware|route|template|default|api\/).tsx?$/;
-
-  const includePattern = /\/app\/.*\.(ts|tsx)$/;
-
-  if (
-    includePattern.test(filePath) === false ||
-    excludePattern.test(filePath)
-  ) {
-    return false;
-  }
-
+function isServerAction(nodePath: NodePath) {
   const isDeclaration =
     nodePath.isFunctionDeclaration() &&
     nodePath.node.async === true &&
@@ -135,45 +124,6 @@ export function isServerAction(filePath: string, nodePath: NodePath) {
     (isDeclaration || isArrowFunction) &&
     isReturningJSXElement(nodePath) === false
   );
-}
-
-/**
- * Returns true if node is exported (named, not default), function declaration and has the name "middleware".
- */
-export function isMiddleware(filePath: string, nodePath: NodePath) {
-  const includePattern = /\/middleware.ts$/;
-
-  if (includePattern.test(filePath) === false) {
-    return false;
-  }
-
-  // export function middleware() {}
-  const isExportNamedDeclaration =
-    nodePath.isFunctionDeclaration() &&
-    nodePath.parentPath?.isExportNamedDeclaration() &&
-    nodePath.node.id?.name === "middleware";
-
-  // export default function middleware() {}
-  const isExportDefaultDeclaration =
-    nodePath.isFunctionDeclaration() &&
-    nodePath.parentPath?.isExportDefaultDeclaration();
-
-  return isExportNamedDeclaration || isExportDefaultDeclaration;
-}
-
-/**
- * IMPORTANT: We don't check for React class components.
- * Return true if node is a function declaration (function MyReactComponent) or arrow function (()=>{}) and returns jsx.
- * @param {Path} path
- * @returns {boolean}
- */
-export function isReactElement(path: NodePath) {
-  let isReactElement = false;
-  if (path.isFunctionDeclaration() || path.isArrowFunctionExpression()) {
-    isReactElement = isReturningJSXElement(path);
-  }
-
-  return isReactElement;
 }
 
 /**
@@ -209,6 +159,21 @@ export function wrapWithFunction(
       "wrapWithFunction(): Unsupported node type. Only arrow functions and function declarations are supported.",
     );
   }
+}
+
+/**
+ * IMPORTANT: We don't check for React class components.
+ * Return true if node is a function declaration (function MyReactComponent) or arrow function (()=>{}) and returns jsx.
+ * @param {Path} path
+ * @returns {boolean}
+ */
+function isReactElement(path: NodePath) {
+  let isReactElement = false;
+  if (path.isFunctionDeclaration() || path.isArrowFunctionExpression()) {
+    isReactElement = isReturningJSXElement(path);
+  }
+
+  return isReactElement;
 }
 
 /**

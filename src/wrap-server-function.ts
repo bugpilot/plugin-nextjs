@@ -28,7 +28,10 @@ export function wrapServerFunction(
           // return the original promise, instead.
           Promise.resolve(result).catch((e) => {
             const err = e as NextError;
-            void captureError(err, buildContext);
+            if (!err.isCaptured) {
+              err.isCaptured = true;
+              void captureError(err, buildContext);
+            }
           });
         }
 
@@ -39,7 +42,11 @@ export function wrapServerFunction(
         // Captures synchronous invokation errors (e.g., if the original function
         // is not async)
         const err = e as NextError;
-        void captureError(err, buildContext);
+
+        if (!err.isCaptured) {
+          void captureError(err, buildContext);
+          err.isCaptured = true;
+        }
 
         // Rethrow the error so the caller can handle it as usual with a try-catch
         throw err;
